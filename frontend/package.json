@@ -1,0 +1,14 @@
+{
+  "name": "sales-intelligence-frontend",
+  "version": "0.1.0-alpha",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "note": "Dependencies will be installed in Phase 3 (Next.js 15, Tailwind, shadcn/ui)"
+}
