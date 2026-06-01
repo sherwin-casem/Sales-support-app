@@ -25,23 +25,28 @@ frontend/
 | Phase | Status |
 |-------|--------|
 | 1 — Structure | Complete |
-| 3 — Frontend implementation | Pending |
+| 3 — Frontend | In progress |
+| 3a — Dashboard shell, login, KPIs | Complete |
 
-## Pages (Phase 3)
+## Pages
 
-- Login
-- Dashboard
-- Leads (table, search, filter, pagination)
-- Campaigns
-- Analytics
-- Settings (dark mode, profile)
+| Path | Description |
+|------|-------------|
+| `/login` | Authentication |
+| `/dashboard` | KPI overview, pipeline stats |
+| `/leads` | Placeholder |
+| `/campaigns` | Placeholder |
+| `/analytics` | Placeholder |
+| `/settings` | Profile & theme |
 
-## Local Development (Phase 3+)
+## Local Development
 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
+Set `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1` in `.env` (project root).
 
 App: http://localhost:3000

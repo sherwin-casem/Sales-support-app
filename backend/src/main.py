@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.analytics.router import router as analytics_router
 from src.auth.router import router as auth_router
 from src.common.config import get_settings
 from src.common.exceptions import AppException
@@ -40,6 +41,7 @@ app.add_middleware(
 
 app.include_router(auth_router, prefix=settings.api_v1_prefix)
 app.include_router(leads_router, prefix=settings.api_v1_prefix)
+app.include_router(analytics_router, prefix=settings.api_v1_prefix)
 
 app.add_exception_handler(AppException, app_exception_handler)
 
