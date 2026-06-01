@@ -11,6 +11,7 @@ from src.auth.router import router as auth_router
 from src.common.config import get_settings
 from src.common.exceptions import AppException
 from src.common.handlers import app_exception_handler
+from src.leads.router import router as leads_router
 
 settings = get_settings()
 
@@ -38,6 +39,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix=settings.api_v1_prefix)
+app.include_router(leads_router, prefix=settings.api_v1_prefix)
 
 app.add_exception_handler(AppException, app_exception_handler)
 
