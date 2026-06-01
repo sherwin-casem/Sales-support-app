@@ -1,1 +1,3 @@
-# Users module — user CRUD, RBAC (Phase 2)
+from src.users.models import User
+
+__all__ = ["User"]

@@ -26,7 +26,20 @@ backend/
 | Phase | Status |
 |-------|--------|
 | 1 — Structure & Docker | Complete |
-| 2 — Backend modules | Pending |
+| 2 — Backend modules | In progress |
+| 2a — Auth (JWT, RBAC) | Complete |
+
+## Auth Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/v1/auth/signup` | Register (default role SALES) |
+| POST | `/api/v1/auth/login` | Login; sets httpOnly refresh cookie |
+| POST | `/api/v1/auth/refresh` | Rotate access token via cookie |
+| POST | `/api/v1/auth/logout` | Revoke refresh token |
+| GET | `/api/v1/auth/me` | Current user profile |
+
+Refresh token is stored hashed in `refresh_tokens` and delivered as an httpOnly cookie scoped to `/api/v1/auth`.
 
 ## Local Development (Phase 2+)
 
