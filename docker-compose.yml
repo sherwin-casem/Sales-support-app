@@ -1,0 +1,5 @@
+# Root docker-compose — delegates to docker/docker-compose.yml
+# Usage: docker compose up -d
+
+include:
+  - path: docker/docker-compose.yml
