@@ -1,1 +1,3 @@
-# Analytics module — KPIs and reporting (Phase 2)
+from src.analytics.router import router
+
+__all__ = ["router"]
