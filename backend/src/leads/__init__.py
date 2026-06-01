@@ -1,1 +1,3 @@
-# Leads module — CRUD, CSV import/export (Phase 2)
+from src.leads.router import router
+
+__all__ = ["router"]

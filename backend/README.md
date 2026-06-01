@@ -41,6 +41,23 @@ backend/
 
 Refresh token is stored hashed in `refresh_tokens` and delivered as an httpOnly cookie scoped to `/api/v1/auth`.
 
+## Lead Endpoints
+
+| Method | Path | Role | Description |
+|--------|------|------|-------------|
+| GET | `/api/v1/leads` | SALES+ | List with search, filter, pagination |
+| POST | `/api/v1/leads` | SALES+ | Create lead |
+| GET | `/api/v1/leads/{id}` | SALES+ | Get lead with decision makers |
+| PATCH | `/api/v1/leads/{id}` | SALES+ | Update lead |
+| DELETE | `/api/v1/leads/{id}` | MANAGER+ | Delete lead |
+| POST | `/api/v1/leads/import` | SALES+ | CSV import |
+| GET | `/api/v1/leads/export` | SALES+ | CSV export |
+| GET | `/api/v1/leads/{id}/decision-makers` | SALES+ | List decision makers |
+| POST | `/api/v1/leads/{id}/decision-makers` | SALES+ | Add decision maker |
+| DELETE | `/api/v1/leads/{id}/decision-makers/{dm_id}` | SALES+ | Remove decision maker |
+
+SALES users see only their own leads (`created_by`). MANAGER and ADMIN see all leads.
+
 ## Local Development (Phase 2+)
 
 ```bash
