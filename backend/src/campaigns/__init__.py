@@ -1,1 +1,3 @@
-# Campaigns module — campaign lifecycle, scheduling (Phase 2)
+from src.campaigns.router import messages_router, router
+
+__all__ = ["router", "messages_router"]

@@ -12,6 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ../database/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql:ro
+      - ../database/migrations/002_discovery_enrichment.sql:/docker-entrypoint-initdb.d/002_discovery_enrichment.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-salesapp} -d ${POSTGRES_DB:-salesapp}"]
       interval: 5s
@@ -88,6 +89,31 @@ services:
         condition: service_healthy
       backend:
         condition: service_started
+    networks:
+      - sales-network
+
+  celery-beat:
+    profiles:
+      - worker
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+      target: development
+    container_name: sales-celery-beat
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-salesapp}:${POSTGRES_PASSWORD:-salesapp}@postgres:5432/${POSTGRES_DB:-salesapp}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    command: celery -A src.jobs.celery_app beat --loglevel=info
+    volumes:
+      - ../backend:/app
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - sales-network
 

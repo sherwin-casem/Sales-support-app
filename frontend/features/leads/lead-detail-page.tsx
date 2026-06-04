@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { LeadStatusBadge } from "@/components/shared/lead-status-badge";
@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ApiClientError } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import { leadsService } from "@/services/leads.service";
+import { enrichmentService } from "@/services/enrichment.service";
 import type { DecisionMakerInput, LeadDetail } from "@/types/leads";
 
 export function LeadDetailPageContent() {
@@ -30,6 +31,8 @@ export function LeadDetailPageContent() {
   const { token } = useAuth();
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [dmDialogOpen, setDmDialogOpen] = useState(false);
   const [dmForm, setDmForm] = useState({ name: "", role: "", email: "", linkedin: "" });
 
@@ -68,6 +71,46 @@ export function LeadDetailPageContent() {
       await loadLead();
     } catch (error) {
       toast.error(error instanceof ApiClientError ? error.message : "Failed to add decision maker");
+    }
+  }
+
+  async function handleEnrich() {
+    if (!token || !lead) return;
+    setIsEnriching(true);
+    try {
+      const job = await enrichmentService.enrichLead(token, lead.id);
+      toast.success("Enrichment started");
+      setTimeout(async () => {
+        try {
+          const status = await enrichmentService.getJobStatus(token, job.task_id);
+          if (status.status === "SUCCESS") {
+            toast.success("Lead enriched");
+            await loadLead();
+          } else if (status.status === "FAILURE") {
+            toast.error("Enrichment failed");
+          }
+        } catch {
+          await loadLead();
+        }
+      }, 3000);
+    } catch (error) {
+      toast.error(error instanceof ApiClientError ? error.message : "Enrichment failed");
+    } finally {
+      setIsEnriching(false);
+    }
+  }
+
+  async function handleVerify() {
+    if (!token || !lead) return;
+    setIsVerifying(true);
+    try {
+      const updated = await leadsService.verify(token, lead.id);
+      setLead({ ...lead, ...updated });
+      toast.success("Contact verification updated");
+    } catch (error) {
+      toast.error(error instanceof ApiClientError ? error.message : "Verification failed");
+    } finally {
+      setIsVerifying(false);
     }
   }
 
@@ -121,6 +164,18 @@ export function LeadDetailPageContent() {
             </a>
           ) : null}
         </div>
+        <div className="flex flex-wrap gap-2">
+          {lead.website ? (
+            <Button size="sm" variant="outline" disabled={isEnriching} onClick={() => void handleEnrich()}>
+              <Sparkles className="mr-1 h-4 w-4" />
+              {isEnriching ? "Enriching…" : "Enrich"}
+            </Button>
+          ) : null}
+          <Button size="sm" variant="outline" disabled={isVerifying} onClick={() => void handleVerify()}>
+            <ShieldCheck className="mr-1 h-4 w-4" />
+            {isVerifying ? "Verifying…" : "Verify contacts"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -131,6 +186,10 @@ export function LeadDetailPageContent() {
           <CardContent className="grid gap-3 text-sm">
             <DetailRow label="Email" value={lead.email} />
             <DetailRow label="Phone" value={lead.phone} />
+            <DetailRow label="Email verified" value={lead.email_verification_status} />
+            <DetailRow label="Phone verified" value={lead.phone_verification_status} />
+            <DetailRow label="Intent score" value={lead.intent_score?.toString()} />
+            <DetailRow label="Source" value={lead.source} />
             <DetailRow label="Industry" value={lead.industry} />
             <DetailRow label="Country" value={lead.country} />
             <DetailRow label="Employees" value={lead.employee_count?.toString()} />

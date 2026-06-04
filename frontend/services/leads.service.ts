@@ -119,4 +119,16 @@ export const leadsService = {
       token,
     });
   },
+
+  verify(token: string, leadId: string) {
+    return apiRequest<Lead>(`/leads/${leadId}/verify`, { method: "POST", token });
+  },
+
+  listDuplicates(token: string, page = 1) {
+    return apiRequest<PaginatedResponse<Lead>>(`/leads/duplicates?page=${page}`, { token });
+  },
+
+  dismissDuplicate(token: string, leadId: string) {
+    return apiRequest<void>(`/leads/duplicates/${leadId}`, { method: "DELETE", token });
+  },
 };

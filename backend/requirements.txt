@@ -19,3 +19,5 @@ openai>=1.57.0
 beautifulsoup4>=4.12.0
 playwright>=1.49.0
 pandas>=2.2.0
+dnspython>=2.7.0
+phonenumbers>=8.13.0

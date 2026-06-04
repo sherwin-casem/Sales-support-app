@@ -94,6 +94,34 @@ async def create_lead(
     return await service.create_lead(current_user, payload)
 
 
+@router.post("/{lead_id}/verify", response_model=LeadResponse)
+async def verify_lead(
+    lead_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, _sales_user],
+) -> LeadResponse:
+    return await LeadService(db).verify_lead(current_user, lead_id)
+
+
+@router.get("/duplicates", response_model=PaginatedResponse[LeadResponse])
+async def list_duplicates(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_minimum_role(UserRole.MANAGER))],
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 20,
+) -> PaginatedResponse[LeadResponse]:
+    return await LeadService(db).list_duplicates(current_user, page=page, page_size=page_size)
+
+
+@router.delete("/duplicates/{lead_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def dismiss_duplicate(
+    lead_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_minimum_role(UserRole.MANAGER))],
+) -> None:
+    await LeadService(db).dismiss_duplicate(current_user, lead_id)
+
+
 @router.get("/{lead_id}", response_model=LeadDetailResponse)
 async def get_lead(
     lead_id: UUID,

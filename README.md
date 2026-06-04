@@ -1,86 +1,50 @@
-# Sales Intelligence & AI Outreach Platform
+# Sales Intelligence & AI Outreach Platform — Parijat Lead Generation
 
-Internal sales intelligence platform — Alpha MVP.
+Web platform for automatic lead discovery, enrichment, verification, campaigns, and AI outreach.
 
-Replace multiple sales tools with unified lead management, enrichment, AI outreach, and campaign tracking.
+## Features (Scope items 7–17)
+
+| # | Feature | Status |
+|---|---------|--------|
+| 7 | Data enrichment | Done |
+| 8 | Decision maker identification | Done (scrape + OpenAI) |
+| 9 | Email verification (OSS) | Done (format + MX) |
+| 10 | Phone verification (OSS) | Done (format validation) |
+| 11 | Multi-channel outreach | Email send + LinkedIn/WhatsApp copy export |
+| 12 | AI message generation | Done |
+| 13 | Scheduled scraping | Celery Beat + discovery profiles |
+| 14 | Duplicate removal | Done |
+| 15 | Intent signal detection | Done |
+| 16 | Campaign performance tracking | Done |
+| 17 | Multi-user RBAC | Done + admin UI |
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | Next.js 15, TypeScript, Tailwind, shadcn/ui |
-| Backend | FastAPI, Python 3.12, SQLAlchemy, Pydantic |
-| Database | PostgreSQL 16 |
-| Queue | Redis + Celery |
-| Auth | JWT + RBAC (ADMIN, MANAGER, SALES) |
-| AI | OpenAI API |
-| Scraping | Playwright, BeautifulSoup |
-| Deployment | Docker Compose |
+Next.js 15 · FastAPI · PostgreSQL 16 · Redis · Celery · OpenAI · Playwright/BeautifulSoup
 
-## Project Structure
-
-```
-├── frontend/           # Next.js application
-├── backend/            # FastAPI modular monolith
-├── database/           # SQL migrations & seeds
-├── docker/             # Dockerfiles & compose
-├── docs/               # Architecture & API design
-├── .env.example        # Environment template
-└── docker-compose.yml  # Root compose entry
-```
-
-## Documentation
-
-- [Architecture](docs/architecture.md)
-- [API Design](docs/api-design.md)
-- [Database Schema](docs/database-schema.md)
-
-## Development Phases
-
-| Phase | Scope | Status |
-|-------|-------|--------|
-| **1** | Architecture, folders, DB schema, Docker | **Complete** |
-| **2** | Backend modules & APIs | **In progress** |
-| 2a | Auth (JWT, RBAC, refresh tokens) | Complete |
-| 2b | Leads (CRUD, CSV, decision makers) | Complete |
-| 2c | Analytics (`GET /analytics/overview`) | Complete |
-| 2d | Celery scaffold (`health.ping`) | Complete |
-| 2e | Users, enrichment, campaigns APIs | Pending |
-| 2f | Alembic baseline (`001_initial_schema`) | Complete |
-| **3** | Frontend | **In progress** |
-| 3a | Login, dashboard shell, KPIs, settings, dark mode | Complete |
-| 3b | Leads, campaigns, analytics pages (full UI) | Complete |
-| **4** | OpenAI, scraping, email integrations | Pending |
-
-## MVP Feature Progress
-
-| Feature | Backend | Frontend |
-|---------|---------|----------|
-| Authentication & RBAC | Done | Done (login) |
-| Lead management | Done | Done |
-| Analytics dashboard | Done | Done |
-| Data enrichment | Pending | Pending |
-| Decision maker detection | Pending | Pending |
-| AI message generation | Pending | Pending |
-| Campaign system | Pending | Pending |
-
-## Getting Started
+## Quick Start
 
 ```bash
-cp .env.docker.example .env   # Docker
-# or: cp .env.local.example .env   # local dev without Docker
-
-# Docker — recommended MVP services only
+cp .env.docker.example .env
 docker compose up -d postgres redis backend frontend
-
-# Optional Celery worker
-docker compose --profile worker up -d
+docker compose --profile worker up -d   # discovery + enrichment workers
 ```
 
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- OpenAPI: http://localhost:8000/docs
+- API docs: http://localhost:8000/docs
 
-## License
+## Documentation
 
-Internal use — Alpha MVP
+- [Installation (Parijat server)](docs/installation.md)
+- [Operations](docs/operations.md)
+- [Third-party services](docs/third-party.md)
+- [Architecture](docs/architecture.md)
+- [API Design](docs/api-design.md)
+
+## Tests
+
+```bash
+cd backend
+pip install -r requirements.txt -r requirements-dev.txt
+pytest
+```

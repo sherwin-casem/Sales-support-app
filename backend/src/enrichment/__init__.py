@@ -1,1 +1,3 @@
-# Enrichment module — pipeline orchestration (Phase 2)
+from src.enrichment.router import router
+
+__all__ = ["router"]

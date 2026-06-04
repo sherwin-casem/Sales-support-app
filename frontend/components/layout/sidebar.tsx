@@ -6,6 +6,7 @@ import {
   BarChart3,
   LayoutDashboard,
   Megaphone,
+  Radar,
   Settings,
   Target,
   Users,
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/discovery", label: "Discovery", icon: Radar },
   { href: "/leads", label: "Leads", icon: Users },
   { href: "/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },

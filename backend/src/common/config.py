@@ -31,9 +31,30 @@ class Settings(BaseSettings):
     refresh_cookie_secure: bool = False
     refresh_cookie_samesite: str = "lax"
 
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o-mini"
+
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = "noreply@example.com"
+    smtp_use_tls: bool = True
+    smtp_dry_run: bool = True
+
+    playwright_headless: bool = True
+    scraper_timeout_seconds: int = 30
+    scraper_max_pages: int = 5
+
+    log_level: str = "INFO"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def sync_database_url(self) -> str:
+        return self.database_url.replace("+asyncpg", "")
 
 
 @lru_cache

@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from src.common.enums import LeadStatus
+from src.common.enums import EmailVerificationStatus, LeadSource, LeadStatus, PhoneVerificationStatus
 
 
 class LeadBase(BaseModel):
@@ -60,6 +60,14 @@ class LeadResponse(LeadBase):
 
     id: uuid.UUID
     created_by: uuid.UUID | None
+    source: LeadSource = LeadSource.MANUAL
+    domain_normalized: str | None = None
+    email_verification_status: EmailVerificationStatus = EmailVerificationStatus.UNKNOWN
+    phone_verification_status: PhoneVerificationStatus = PhoneVerificationStatus.UNKNOWN
+    intent_score: int = 0
+    is_duplicate: bool = False
+    duplicate_of_id: uuid.UUID | None = None
+    discovery_profile_id: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
 

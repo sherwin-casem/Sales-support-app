@@ -8,7 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.auth.rbac import has_minimum_role
-from src.common.enums import LeadStatus, UserRole
+from src.common.enums import LeadSource, LeadStatus, UserRole
+from src.common.url_utils import normalize_domain, normalize_website
+from src.leads.dedup import find_duplicate
+from src.verification.email_phone import verify_email, verify_phone
 from src.common.exceptions import ForbiddenException, NotFoundException
 from src.common.pagination import PaginatedResponse
 from src.leads.models import DecisionMaker, Lead
@@ -103,10 +106,24 @@ class LeadService:
         return LeadDetailResponse.model_validate(lead)
 
     async def create_lead(self, user: User, payload: LeadCreate) -> LeadResponse:
+        website = normalize_website(payload.website)
+        duplicate = await find_duplicate(
+            self.db,
+            company_name=payload.company_name,
+            website=website,
+            email=str(payload.email) if payload.email else None,
+        )
         lead = Lead(
             **payload.model_dump(mode="json"),
+            website=website,
+            domain_normalized=normalize_domain(website),
             created_by=user.id,
+            source=LeadSource.MANUAL,
+            is_duplicate=duplicate is not None,
+            duplicate_of_id=duplicate.id if duplicate else None,
         )
+        lead.email_verification_status = verify_email(str(payload.email) if payload.email else None)
+        lead.phone_verification_status = verify_phone(payload.phone, payload.country or "US")
         self.db.add(lead)
         await self.db.flush()
         await self.db.refresh(lead)
@@ -251,6 +268,35 @@ class LeadService:
                 }
             )
         return output.getvalue()
+
+    async def verify_lead(self, user: User, lead_id: UUID) -> LeadResponse:
+        lead = await self._get_lead_for_user(user, lead_id)
+        lead.email_verification_status = verify_email(lead.email)
+        lead.phone_verification_status = verify_phone(lead.phone, lead.country or "US")
+        from datetime import UTC, datetime
+
+        if lead.email_verification_status.value in ("MX_FOUND", "VALID_FORMAT"):
+            lead.email_verified_at = datetime.now(UTC)
+        await self.db.flush()
+        await self.db.refresh(lead)
+        return LeadResponse.model_validate(lead)
+
+    async def list_duplicates(self, user: User, page: int = 1, page_size: int = 20) -> PaginatedResponse[LeadResponse]:
+        query = select(Lead).where(Lead.is_duplicate.is_(True))
+        query = self._apply_access_filter(query, user)
+        total = await self.db.scalar(select(func.count()).select_from(query.subquery())) or 0
+        query = query.order_by(Lead.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+        leads = (await self.db.scalars(query)).all()
+        items = [LeadResponse.model_validate(lead) for lead in leads]
+        return PaginatedResponse.build(items, total, page, page_size)
+
+    async def dismiss_duplicate(self, user: User, lead_id: UUID) -> None:
+        if not self._can_access_all(user):
+            raise ForbiddenException("Only managers can dismiss duplicates", code="INSUFFICIENT_ROLE")
+        lead = await self._get_lead_for_user(user, lead_id)
+        if not lead.is_duplicate:
+            raise NotFoundException("Not a duplicate record", code="NOT_DUPLICATE")
+        await self.db.delete(lead)
 
 
 def _empty_to_none(value: str | None) -> str | None:
