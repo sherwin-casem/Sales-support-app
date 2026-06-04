@@ -1,1 +1,3 @@
-# Jobs module — Celery tasks (Phase 2)
+from src.jobs.celery_app import celery_app
+
+__all__ = ["celery_app"]

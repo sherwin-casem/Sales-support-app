@@ -10,8 +10,11 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sales Intelligence Platform",
-  description: "Lead management, enrichment, and AI outreach",
+  title: {
+    default: "Sales Intelligence Platform",
+    template: "%s | Sales Intelligence",
+  },
+  description: "Web platform for lead management, enrichment, and AI outreach",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

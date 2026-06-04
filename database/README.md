@@ -7,25 +7,38 @@ PostgreSQL schema and migration scripts for the Sales Intelligence platform.
 ```
 database/
 ├── migrations/
-│   ├── 001_initial_schema.sql       # Up migration
-│   └── 001_initial_schema.down.sql  # Down migration
+│   ├── 001_initial_schema.sql       # Canonical up migration (source of truth)
+│   └── 001_initial_schema.down.sql  # Canonical down migration
 └── seeds/                           # Seed data (Phase 2)
 ```
 
-## Apply Migration (Manual)
+## Alembic (recommended)
 
-With Postgres running via Docker Compose:
+Alembic lives in `backend/alembic/` and baseline revision `001_initial_schema` executes the
+SQL files above without duplicating schema logic.
 
 ```bash
-docker compose exec postgres psql -U salesapp -d salesapp -f /docker-entrypoint-initdb.d/001_initial_schema.sql
+cd backend
+
+# Fresh database
+alembic upgrade head
+
+# Database already initialized from 001_initial_schema.sql (Docker init, manual psql, etc.)
+alembic stamp head
 ```
 
-Or connect locally:
+## Manual SQL (legacy / Docker init)
+
+Docker Compose still mounts the SQL file into Postgres `docker-entrypoint-initdb.d` on first boot.
+After that, stamp Alembic so revision history matches:
+
+```bash
+docker compose exec backend alembic stamp head
+```
+
+Or apply manually:
 
 ```bash
 psql postgresql://salesapp:salesapp@localhost:5432/salesapp -f database/migrations/001_initial_schema.sql
+cd backend && alembic stamp head
 ```
-
-## Alembic (Phase 2)
-
-Alembic will be configured in `backend/` to manage migrations programmatically. SQL files here serve as the canonical schema reference for Phase 1.

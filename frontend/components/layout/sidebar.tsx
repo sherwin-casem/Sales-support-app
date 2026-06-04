@@ -30,7 +30,7 @@ export function Sidebar() {
         <Target className="h-6 w-6 text-primary" />
         <div>
           <p className="text-sm font-semibold">Sales Intelligence</p>
-          <p className="text-xs text-muted-foreground">Alpha MVP</p>
+          <p className="text-xs text-muted-foreground">Web Platform</p>
         </div>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-4">

@@ -170,9 +170,14 @@ Health checks on backend (`/health`) and postgres readiness gate for migrations.
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| 1 | Architecture, folders, DB schema, Docker | **Current** |
-| 2 | Backend modules, API, migrations | Pending |
-| 3 | Frontend pages & features | Pending |
+| 1 | Architecture, folders, DB schema, Docker | **Complete** |
+| 2 | Backend modules & APIs | **In progress** |
+| 2a | Auth, leads, analytics, Celery scaffold | Complete |
+| 2b | Users, enrichment, campaigns | Pending |
+| 2c | Alembic baseline (`001_initial_schema`) | Complete |
+| 3 | Frontend | **In progress** |
+| 3a | Login, dashboard, settings | Complete |
+| 3b | Leads, campaigns, analytics pages | Pending |
 | 4 | OpenAI, scraping, email integrations | Pending |
 
 ## Open Decisions (Require Approval Before Change)

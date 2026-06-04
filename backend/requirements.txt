@@ -13,6 +13,7 @@ python-multipart>=0.0.17
 celery[redis]>=5.4.0
 redis>=5.2.0
 alembic>=1.14.0
+psycopg2-binary>=2.9.9
 httpx>=0.28.0
 openai>=1.57.0
 beautifulsoup4>=4.12.0

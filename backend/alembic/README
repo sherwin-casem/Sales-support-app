@@ -1,0 +1,31 @@
+# Alembic migrations
+
+Baseline revision `001_initial_schema` executes the canonical SQL in
+`database/migrations/001_initial_schema.sql`.
+
+## Fresh database
+
+```bash
+cd backend
+alembic upgrade head
+```
+
+## Existing database (already applied via SQL init)
+
+Mark the baseline without running DDL:
+
+```bash
+cd backend
+alembic stamp head
+```
+
+## New migrations
+
+```bash
+alembic revision -m "describe change"
+# or autogenerate once all models exist:
+alembic revision --autogenerate -m "describe change"
+alembic upgrade head
+```
+
+Uses `DATABASE_URL` from `.env` (async URL is converted to sync `psycopg2` for Alembic).
