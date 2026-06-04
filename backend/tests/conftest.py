@@ -25,7 +25,10 @@ from src.main import app
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = PROJECT_ROOT.parent
-MIGRATION_SQL = REPO_ROOT / "database" / "migrations" / "001_initial_schema.sql"
+MIGRATION_SQL_FILES = [
+    REPO_ROOT / "database" / "migrations" / "001_initial_schema.sql",
+    REPO_ROOT / "database" / "migrations" / "002_discovery_enrichment.sql",
+]
 
 DEFAULT_TEST_DATABASE_URL = "postgresql+asyncpg://salesapp:salesapp@localhost:5432/salesapp_test"
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", DEFAULT_TEST_DATABASE_URL)
@@ -104,13 +107,13 @@ async def _schema_is_initialized(engine: AsyncEngine) -> bool:
 
 
 async def _apply_schema(engine: AsyncEngine) -> None:
-    if not MIGRATION_SQL.exists():
-        raise FileNotFoundError(f"Migration file not found: {MIGRATION_SQL}")
-
-    sql = MIGRATION_SQL.read_text(encoding="utf-8")
     async with engine.begin() as connection:
-        for statement in _iter_sql_statements(sql):
-            await connection.execute(text(statement))
+        for migration_path in MIGRATION_SQL_FILES:
+            if not migration_path.exists():
+                raise FileNotFoundError(f"Migration file not found: {migration_path}")
+            sql = migration_path.read_text(encoding="utf-8")
+            for statement in _iter_sql_statements(sql):
+                await connection.execute(text(statement))
 
 
 @pytest_asyncio.fixture(scope="session")
