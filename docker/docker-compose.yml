@@ -63,6 +63,8 @@ services:
       - sales-network
 
   celery-worker:
+    profiles:
+      - worker
     build:
       context: ..
       dockerfile: docker/backend/Dockerfile

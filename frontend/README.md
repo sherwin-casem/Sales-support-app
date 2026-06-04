@@ -26,17 +26,21 @@ frontend/
 |-------|--------|
 | 1 — Structure | Complete |
 | 3 — Frontend | In progress |
-| 3a — Dashboard shell, login, KPIs | Complete |
+| 3a — Login, dashboard shell, KPIs, settings, dark mode | Complete |
+| 3b — Leads UI (CRUD, import/export, detail) | Complete |
+| 3c — Analytics page | Complete |
+| 3d — Campaigns UI (preview) | Complete |
 
 ## Pages
 
 | Path | Description |
 |------|-------------|
-| `/login` | Authentication |
+| `/login` | Sign in / sign up |
 | `/dashboard` | KPI overview, pipeline stats |
-| `/leads` | Placeholder |
-| `/campaigns` | Placeholder |
-| `/analytics` | Placeholder |
+| `/leads` | Lead table, search, filters, CSV import/export |
+| `/leads/[id]` | Lead detail & decision makers |
+| `/campaigns` | Campaign preview (API pending) |
+| `/analytics` | Pipeline analytics & funnel |
 | `/settings` | Profile & theme |
 
 ## Local Development

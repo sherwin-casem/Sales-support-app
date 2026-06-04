@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Target } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoginForm } from "@/features/auth/login-form";
+import { SignupForm } from "@/features/auth/signup-form";
 import { useAuth } from "@/lib/auth-context";
+import { cn } from "@/lib/utils";
+
+type AuthTab = "login" | "signup";
 
 export default function LoginPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const [tab, setTab] = useState<AuthTab>("login");
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -39,9 +44,33 @@ export default function LoginPage() {
           <Target className="h-6 w-6" />
         </div>
         <h1 className="text-2xl font-bold">Sales Intelligence</h1>
-        <p className="text-sm text-muted-foreground">AI-powered outreach and lead management</p>
+        <p className="text-sm text-muted-foreground">Web platform for leads, outreach, and analytics</p>
       </div>
-      <LoginForm />
+
+      <div className="flex w-full rounded-lg border bg-muted/40 p-1">
+        <button
+          type="button"
+          className={cn(
+            "flex-1 rounded-md py-2 text-sm font-medium transition-colors",
+            tab === "login" ? "bg-background shadow-sm" : "text-muted-foreground",
+          )}
+          onClick={() => setTab("login")}
+        >
+          Sign in
+        </button>
+        <button
+          type="button"
+          className={cn(
+            "flex-1 rounded-md py-2 text-sm font-medium transition-colors",
+            tab === "signup" ? "bg-background shadow-sm" : "text-muted-foreground",
+          )}
+          onClick={() => setTab("signup")}
+        >
+          Sign up
+        </button>
+      </div>
+
+      {tab === "login" ? <LoginForm /> : <SignupForm />}
     </div>
   );
 }

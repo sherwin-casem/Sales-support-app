@@ -40,30 +40,46 @@ Replace multiple sales tools with unified lead management, enrichment, AI outrea
 | Phase | Scope | Status |
 |-------|-------|--------|
 | **1** | Architecture, folders, DB schema, Docker | **Complete** |
-| 2 | Backend modules, API, Alembic migrations | Pending |
-| 3 | Frontend pages & features | Pending |
-| 4 | OpenAI, scraping, email integrations | Pending |
+| **2** | Backend modules & APIs | **In progress** |
+| 2a | Auth (JWT, RBAC, refresh tokens) | Complete |
+| 2b | Leads (CRUD, CSV, decision makers) | Complete |
+| 2c | Analytics (`GET /analytics/overview`) | Complete |
+| 2d | Celery scaffold (`health.ping`) | Complete |
+| 2e | Users, enrichment, campaigns APIs | Pending |
+| 2f | Alembic baseline (`001_initial_schema`) | Complete |
+| **3** | Frontend | **In progress** |
+| 3a | Login, dashboard shell, KPIs, settings, dark mode | Complete |
+| 3b | Leads, campaigns, analytics pages (full UI) | Complete |
+| **4** | OpenAI, scraping, email integrations | Pending |
 
-## Getting Started (Phase 2+)
+## MVP Feature Progress
+
+| Feature | Backend | Frontend |
+|---------|---------|----------|
+| Authentication & RBAC | Done | Done (login) |
+| Lead management | Done | Done |
+| Analytics dashboard | Done | Done |
+| Data enrichment | Pending | Pending |
+| Decision maker detection | Pending | Pending |
+| AI message generation | Pending | Pending |
+| Campaign system | Pending | Pending |
+
+## Getting Started
 
 ```bash
-cp .env.example .env
-docker compose up -d
+cp .env.docker.example .env   # Docker
+# or: cp .env.local.example .env   # local dev without Docker
+
+# Docker — recommended MVP services only
+docker compose up -d postgres redis backend frontend
+
+# Optional Celery worker
+docker compose --profile worker up -d
 ```
 
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
 - OpenAPI: http://localhost:8000/docs
-
-## MVP Features
-
-1. Lead Management (CRUD, CSV import/export)
-2. Data Enrichment (website scraping pipeline)
-3. Decision Maker Identification
-4. AI Message Generation (email, LinkedIn, WhatsApp copy)
-5. Campaign System (email sending only)
-6. Analytics Dashboard
-7. Authentication & Multi-user RBAC
 
 ## License
 
