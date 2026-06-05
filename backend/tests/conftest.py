@@ -28,7 +28,11 @@ REPO_ROOT = PROJECT_ROOT.parent
 MIGRATION_SQL_FILES = [
     REPO_ROOT / "database" / "migrations" / "001_initial_schema.sql",
     REPO_ROOT / "database" / "migrations" / "002_discovery_enrichment.sql",
+    REPO_ROOT / "database" / "migrations" / "003_lead_search_runs.sql",
 ]
+
+# Table used to detect whether each migration has been applied to the test DB.
+MIGRATION_SENTINEL_TABLES = ["users", "discovery_profiles", "lead_search_runs"]
 
 DEFAULT_TEST_DATABASE_URL = "postgresql+asyncpg://salesapp:salesapp@localhost:5432/salesapp_test"
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", DEFAULT_TEST_DATABASE_URL)
@@ -98,19 +102,22 @@ async def _ensure_test_database_exists(test_url: str) -> None:
         await admin_engine.dispose()
 
 
-async def _schema_is_initialized(engine: AsyncEngine) -> bool:
+async def _table_exists(engine: AsyncEngine, table_name: str) -> bool:
     async with engine.connect() as connection:
         result = await connection.scalar(
-            text("SELECT to_regclass('public.users') IS NOT NULL"),
+            text("SELECT to_regclass(:name) IS NOT NULL"),
+            {"name": f"public.{table_name}"},
         )
         return bool(result)
 
 
-async def _apply_schema(engine: AsyncEngine) -> None:
-    async with engine.begin() as connection:
-        for migration_path in MIGRATION_SQL_FILES:
-            if not migration_path.exists():
-                raise FileNotFoundError(f"Migration file not found: {migration_path}")
+async def _apply_pending_migrations(engine: AsyncEngine) -> None:
+    for migration_path, sentinel in zip(MIGRATION_SQL_FILES, MIGRATION_SENTINEL_TABLES, strict=True):
+        if await _table_exists(engine, sentinel):
+            continue
+        if not migration_path.exists():
+            raise FileNotFoundError(f"Migration file not found: {migration_path}")
+        async with engine.begin() as connection:
             sql = migration_path.read_text(encoding="utf-8")
             for statement in _iter_sql_statements(sql):
                 await connection.execute(text(statement))
@@ -126,8 +133,7 @@ async def test_engine() -> AsyncGenerator[AsyncEngine, None]:
         echo=False,
     )
 
-    if not await _schema_is_initialized(engine):
-        await _apply_schema(engine)
+    await _apply_pending_migrations(engine)
 
     yield engine
     await engine.dispose()

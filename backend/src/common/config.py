@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
 
+    google_cse_api_key: str = ""
+    google_cse_cx: str = ""
+    google_cse_max_results: int = 20
+
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_user: str = ""

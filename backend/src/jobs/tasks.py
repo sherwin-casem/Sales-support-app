@@ -23,6 +23,45 @@ def health_ping() -> str:
     return "pong"
 
 
+@celery_app.task(name="leads.run_search", bind=True)
+def run_lead_search_task(self, search_run_id: str, max_results: int = 20) -> dict:
+    run_uuid = uuid.UUID(search_run_id)
+    with get_sync_db() as session:
+        from src.leads.search.models import LeadSearchRun
+        from src.leads.search.pipeline import run_search_pipeline
+
+        run = session.get(LeadSearchRun, run_uuid)
+        if run is None:
+            return {"error": "search_run_not_found"}
+
+        run.status = CrawlRunStatus.RUNNING
+        run.started_at = datetime.now(UTC)
+        run.celery_task_id = self.request.id
+
+        try:
+            criteria, preview_items, pages, discovered_urls = run_search_pipeline(
+                run.query_text,
+                max_results=max_results,
+                session=session,
+            )
+            run.parsed_criteria = criteria.model_dump()
+            run.preview_results = [item.model_dump(mode="json") for item in preview_items]
+            run.seed_urls = discovered_urls
+            run.pages_crawled = pages
+            run.status = CrawlRunStatus.COMPLETED
+            run.completed_at = datetime.now(UTC)
+            return {
+                "pages_crawled": pages,
+                "preview_count": len(preview_items),
+                "discovered_urls": len(discovered_urls),
+            }
+        except Exception as exc:
+            run.status = CrawlRunStatus.FAILED
+            run.error_message = str(exc)[:2000]
+            run.completed_at = datetime.now(UTC)
+            raise
+
+
 @celery_app.task(name="discovery.crawl_profile", bind=True)
 def crawl_discovery_profile(self, crawl_run_id: str) -> dict:
     run_uuid = uuid.UUID(crawl_run_id)

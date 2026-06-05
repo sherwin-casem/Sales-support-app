@@ -18,6 +18,14 @@ from src.leads.schemas import (
     LeadResponse,
     LeadUpdate,
 )
+from src.leads.search.schemas import (
+    LeadSearchRequest,
+    LeadSearchRunResponse,
+    LeadSearchSaveRequest,
+    LeadSearchSaveResponse,
+    LeadSearchStartResponse,
+)
+from src.leads.search.service import LeadSearchService
 from src.leads.service import LeadService
 from src.users.models import User
 
@@ -82,6 +90,34 @@ async def export_leads(
         media_type="text/csv",
         headers={"Content-Disposition": 'attachment; filename="leads.csv"'},
     )
+
+
+@router.post("/search", response_model=LeadSearchStartResponse, status_code=status.HTTP_202_ACCEPTED)
+async def start_lead_search(
+    payload: LeadSearchRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, _sales_user],
+) -> LeadSearchStartResponse:
+    return await LeadSearchService(db).start_search(current_user, payload)
+
+
+@router.get("/search/{search_id}", response_model=LeadSearchRunResponse)
+async def get_lead_search(
+    search_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, _sales_user],
+) -> LeadSearchRunResponse:
+    return await LeadSearchService(db).get_search_run(current_user, search_id)
+
+
+@router.post("/search/{search_id}/save", response_model=LeadSearchSaveResponse)
+async def save_lead_search_results(
+    search_id: UUID,
+    payload: LeadSearchSaveRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, _sales_user],
+) -> LeadSearchSaveResponse:
+    return await LeadSearchService(db).save_preview_leads(current_user, search_id, payload)
 
 
 @router.post("", response_model=LeadResponse, status_code=status.HTTP_201_CREATED)
