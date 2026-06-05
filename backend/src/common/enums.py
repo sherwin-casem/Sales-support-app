@@ -19,6 +19,7 @@ class LeadSource(str, enum.Enum):
     MANUAL = "MANUAL"
     IMPORT = "IMPORT"
     DISCOVERY = "DISCOVERY"
+    SEARCH = "SEARCH"
 
 
 class CrawlRunStatus(str, enum.Enum):

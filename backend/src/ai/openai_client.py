@@ -151,3 +151,205 @@ def generate_outreach_message(
     except Exception:
         pass
     return None, f"Hello {contact}, reaching out from Parijat regarding automation solutions for {company_name}."
+
+
+def parse_lead_search_query(query: str, settings: Settings | None = None) -> dict:
+    """Parse natural-language lead search into structured criteria."""
+    settings = settings or get_settings()
+    client = _client(settings)
+    fallback = _fallback_parse_query(query)
+
+    if client is None:
+        return fallback
+
+    try:
+        response = client.chat.completions.create(
+            model=settings.openai_model,
+            messages=[
+                {"role": "system", "content": PARIJAT_CONTEXT},
+                {
+                    "role": "user",
+                    "content": (
+                        "Parse this B2B lead search request into JSON with keys: "
+                        "industries (array), countries (array), keywords (array), "
+                        "company_signals (array), exclude_keywords (array), relevance_notes (string). "
+                        f"Query: {query}"
+                    ),
+                },
+            ],
+            max_tokens=400,
+            temperature=0,
+        )
+        content = response.choices[0].message.content or "{}"
+        start = content.find("{")
+        end = content.rfind("}") + 1
+        if start >= 0 and end > start:
+            parsed = json.loads(content[start:end])
+            return {
+                "industries": parsed.get("industries") or [],
+                "countries": parsed.get("countries") or [],
+                "keywords": parsed.get("keywords") or [],
+                "company_signals": parsed.get("company_signals") or [],
+                "exclude_keywords": parsed.get("exclude_keywords") or [],
+                "relevance_notes": parsed.get("relevance_notes") or "",
+            }
+    except Exception:
+        pass
+    return fallback
+
+
+def build_web_search_queries(
+    criteria: dict,
+    original_query: str,
+    settings: Settings | None = None,
+) -> list[str]:
+    """Build 1–3 Google search queries from parsed lead-search criteria."""
+    settings = settings or get_settings()
+    client = _client(settings)
+    fallback = _fallback_web_search_queries(criteria, original_query)
+
+    if client is None:
+        return fallback
+
+    try:
+        response = client.chat.completions.create(
+            model=settings.openai_model,
+            messages=[
+                {"role": "system", "content": PARIJAT_CONTEXT},
+                {
+                    "role": "user",
+                    "content": (
+                        "Generate 1 to 3 Google search queries to find B2B company websites matching "
+                        "this lead search. Return JSON array of strings only. Focus on finding company "
+                        f"homepages and industry directories.\nCriteria: {json.dumps(criteria)}\n"
+                        f"Original request: {original_query}"
+                    ),
+                },
+            ],
+            max_tokens=200,
+            temperature=0,
+        )
+        content = response.choices[0].message.content or "[]"
+        start = content.find("[")
+        end = content.rfind("]") + 1
+        if start >= 0 and end > start:
+            parsed = json.loads(content[start:end])
+            queries = [str(q).strip() for q in parsed if str(q).strip()]
+            if queries:
+                return queries[:3]
+    except Exception:
+        pass
+    return fallback
+
+
+def _fallback_web_search_queries(criteria: dict, original_query: str) -> list[str]:
+    parts: list[str] = []
+    parts.extend(criteria.get("keywords") or [])
+    parts.extend(criteria.get("industries") or [])
+    parts.extend(criteria.get("countries") or [])
+    if parts:
+        return [" ".join(parts[:8]) + " companies"]
+    return [original_query.strip()[:200]]
+
+
+def _fallback_parse_query(query: str) -> dict:
+    words = [w.strip(".,!?") for w in query.lower().split() if len(w) > 3]
+    return {
+        "industries": [],
+        "countries": [],
+        "keywords": words[:10],
+        "company_signals": [],
+        "exclude_keywords": [],
+        "relevance_notes": query[:500],
+    }
+
+
+def score_leads_against_criteria(
+    candidates: list[dict],
+    criteria: dict,
+    settings: Settings | None = None,
+    threshold: int = 40,
+) -> list[dict]:
+    """Score and filter candidate leads. Each candidate dict must have company_name, optional text fields."""
+    if not candidates:
+        return []
+
+    settings = settings or get_settings()
+    client = _client(settings)
+
+    if client is None:
+        return _fallback_score_leads(candidates, criteria, threshold)
+
+    try:
+        response = client.chat.completions.create(
+            model=settings.openai_model,
+            messages=[
+                {"role": "system", "content": PARIJAT_CONTEXT},
+                {
+                    "role": "user",
+                    "content": (
+                        f"Score each company 0-100 for this lead search criteria: {json.dumps(criteria)}. "
+                        "Return JSON array of objects with company_name, match_score (int), match_reason (short string). "
+                        f"Companies: {json.dumps(candidates[:50])}"
+                    ),
+                },
+            ],
+            max_tokens=2000,
+            temperature=0.1,
+        )
+        content = response.choices[0].message.content or "[]"
+        start = content.find("[")
+        end = content.rfind("]") + 1
+        if start >= 0 and end > start:
+            scored = json.loads(content[start:end])
+            by_name = {s.get("company_name", "").lower(): s for s in scored}
+            result = []
+            for cand in candidates:
+                name_key = cand["company_name"].lower()
+                score_data = by_name.get(name_key, {})
+                score = int(score_data.get("match_score", 50))
+                if score >= threshold:
+                    result.append({
+                        **cand,
+                        "match_score": score,
+                        "match_reason": str(score_data.get("match_reason", "Matched search criteria"))[:500],
+                    })
+            return sorted(result, key=lambda x: x["match_score"], reverse=True)
+    except Exception:
+        pass
+    return _fallback_score_leads(candidates, criteria, threshold)
+
+
+def _fallback_score_leads(candidates: list[dict], criteria: dict, threshold: int) -> list[dict]:
+    keywords = [k.lower() for k in criteria.get("keywords", [])]
+    industries = [i.lower() for i in criteria.get("industries", [])]
+    countries = [c.lower() for c in criteria.get("countries", [])]
+    result = []
+
+    for cand in candidates:
+        text = " ".join(
+            str(cand.get(k, "") or "")
+            for k in ("company_name", "industry", "country", "scraped_title", "website")
+        ).lower()
+        score = 30
+        reasons = []
+        for kw in keywords:
+            if kw in text:
+                score += 15
+                reasons.append(kw)
+        for ind in industries:
+            if ind in text:
+                score += 20
+                reasons.append(ind)
+        for country in countries:
+            if country in text:
+                score += 15
+                reasons.append(country)
+        score = min(score, 100)
+        if score >= threshold:
+            result.append({
+                **cand,
+                "match_score": score,
+                "match_reason": f"Keyword match: {', '.join(reasons[:5])}" if reasons else "Partial match",
+            })
+    return sorted(result, key=lambda x: x["match_score"], reverse=True)

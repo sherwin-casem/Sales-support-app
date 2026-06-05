@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "title": "Acme Water Treatment - Home",
+      "link": "https://acme-water.example/",
+      "snippet": "Leading water treatment solutions in India."
+    },
+    {
+      "title": "Process Automation Corp",
+      "link": "https://process-auto.example/about",
+      "snippet": "Industrial automation for manufacturing plants."
+    },
+    {
+      "title": "Member Directory | Water Association",
+      "link": "https://water-assoc.example/members",
+      "snippet": "List of member companies in water treatment."
+    }
+  ]
+}

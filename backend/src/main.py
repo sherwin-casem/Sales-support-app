@@ -15,7 +15,6 @@ from src.common.config import get_settings
 from src.common.database import engine
 from src.common.exceptions import AppException
 from src.common.handlers import app_exception_handler
-from src.discovery.router import router as discovery_router
 from src.enrichment.router import router as enrichment_router
 from src.leads.router import router as leads_router
 from src.users.router import router as users_router
@@ -48,7 +47,6 @@ app.add_middleware(
 app.include_router(auth_router, prefix=settings.api_v1_prefix)
 app.include_router(users_router, prefix=settings.api_v1_prefix)
 app.include_router(leads_router, prefix=settings.api_v1_prefix)
-app.include_router(discovery_router, prefix=settings.api_v1_prefix)
 app.include_router(enrichment_router, prefix=settings.api_v1_prefix)
 app.include_router(campaigns_router, prefix=settings.api_v1_prefix)
 app.include_router(messages_router, prefix=settings.api_v1_prefix)
