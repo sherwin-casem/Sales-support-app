@@ -1,5 +1,5 @@
 export type LeadStatus = "NEW" | "ENRICHED" | "CONTACTED" | "REPLIED" | "CONVERTED";
-export type LeadSource = "MANUAL" | "IMPORT" | "DISCOVERY";
+export type LeadSource = "MANUAL" | "IMPORT" | "DISCOVERY" | "SEARCH";
 export type VerificationStatus = "UNKNOWN" | "VALID_FORMAT" | "MX_FOUND" | "INVALID";
 
 export interface Lead {
