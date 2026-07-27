@@ -1,4 +1,4 @@
-# Sales Intelligence & AI Outreach Platform — Parijat Lead Generation
+# Sales Intelligence & AI Outreach Platform
 
 Web platform for automatic lead discovery, enrichment, verification, campaigns, and AI outreach.
 
